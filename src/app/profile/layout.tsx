@@ -1,6 +1,6 @@
 import { HeaderNav } from "@/components/header-nav";
 
-export default function HomeLayout({
+export default function ProfileLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
