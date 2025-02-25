@@ -1,9 +1,9 @@
-export default function Home() {
+export default function Profile() {
   return (
     <div
       className="grow flex justify-center items-center"
     >
-      Home Page
+      Profile Page
     </div>
   );
 }
