@@ -10,15 +10,17 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod";
 import { registrationSchema } from "@/lib/schemas/registration-schema";
+import { useRegistrationStore } from "@/lib/store/useRegistrationStore";
 
 export default function RegistrationPage() {
+  const { changeValues, ...other } = useRegistrationStore()
   const form = useForm<z.infer<typeof registrationSchema>>({
     resolver: zodResolver(registrationSchema),
     defaultValues: {
-      name: "",
-      email: "",
-      password: "",
-      confirmPassword: "",
+      name: other.name,
+      email: other.email,
+      password: other.password,
+      confirmPassword: other.confirmPassword,
     },
   })
 
