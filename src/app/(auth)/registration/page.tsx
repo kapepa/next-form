@@ -11,9 +11,11 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod";
 import { registrationSchema } from "@/lib/schemas/registration-schema";
 import { useRegistrationStore } from "@/lib/store/useRegistrationStore";
+import { ChangeEvent } from "react";
+import { signIn } from "next-auth/react";
 
 export default function RegistrationPage() {
-  const { changeValues, ...other } = useRegistrationStore()
+  const { changeValues, ...other } = useRegistrationStore();
   const form = useForm<z.infer<typeof registrationSchema>>({
     resolver: zodResolver(registrationSchema),
     defaultValues: {
@@ -24,8 +26,26 @@ export default function RegistrationPage() {
     },
   })
 
-  function onSubmit(values: z.infer<typeof registrationSchema>) {
-    console.log(values)
+  async function onSubmit(formData: z.infer<typeof registrationSchema>) {
+    await signIn("credentials", formData).then((res) => {
+
+    })
+  }
+
+  function handlerChangeValue(e: ChangeEvent<HTMLInputElement>, fieldName: keyof z.infer<typeof registrationSchema>) {
+    const value = e.target.value;
+    changeValues({ [fieldName]: value });
+    form.setValue(fieldName, value);
+  }
+
+  function handlerReset() {
+    form.reset();
+    changeValues({
+      name: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+    });
   }
 
   return (
@@ -63,6 +83,10 @@ export default function RegistrationPage() {
                         type="text"
                         placeholder="Your name"
                         {...field}
+                        onChange={(e) => {
+                          field.onChange(e);
+                          handlerChangeValue(e, "name");
+                        }}
                       />
                     </FormControl>
                     <FormDescription>
@@ -83,6 +107,10 @@ export default function RegistrationPage() {
                         type="email"
                         placeholder="example@mail.com"
                         {...field}
+                        onChange={(e) => {
+                          field.onChange(e);
+                          handlerChangeValue(e, "email");
+                        }}
                       />
                     </FormControl>
                     <FormDescription>
@@ -103,6 +131,10 @@ export default function RegistrationPage() {
                         type="password"
                         placeholder="******"
                         {...field}
+                        onChange={(e) => {
+                          field.onChange(e);
+                          handlerChangeValue(e, "password");
+                        }}
                       />
                     </FormControl>
                     <FormDescription>
@@ -123,6 +155,10 @@ export default function RegistrationPage() {
                         type="password"
                         placeholder="******"
                         {...field}
+                        onChange={(e) => {
+                          field.onChange(e);
+                          handlerChangeValue(e, "confirmPassword");
+                        }}
                       />
                     </FormControl>
                     <FormDescription>
@@ -138,6 +174,7 @@ export default function RegistrationPage() {
                 <Button
                   type="reset"
                   variant="secondary"
+                  onClick={handlerReset}
                 >
                   Reset
                 </Button>
