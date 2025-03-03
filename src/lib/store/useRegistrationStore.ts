@@ -9,9 +9,9 @@ interface IRegistrationStore extends RegistrationSchemaType {
 }
 
 export const useRegistrationStore = create<IRegistrationStore>((set) => ({
-  name: "",
-  email: "",
-  password: "",
-  confirmPassword: "",
+  name: "Karma",
+  email: "karma@gmail.com",
+  password: "Uva123456",
+  confirmPassword: "Uva123456",
   changeValues: (newValues) => set((state) => ({ ...state, ...newValues })),
 }))
