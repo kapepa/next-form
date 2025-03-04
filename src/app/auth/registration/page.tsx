@@ -13,6 +13,7 @@ import { registrationSchema } from "@/lib/schemas/registration-schema";
 import { useRegistrationStore } from "@/lib/store/useRegistrationStore";
 import { ChangeEvent } from "react";
 import { signIn } from "next-auth/react";
+import { toast } from "sonner"
 
 export default function RegistrationPage() {
   const { changeValues, ...other } = useRegistrationStore();
@@ -27,9 +28,15 @@ export default function RegistrationPage() {
   })
 
   async function onSubmit(formData: z.infer<typeof registrationSchema>) {
-    await signIn("credentials", formData).then((res) => {
-
-    })
+    await signIn("credentials", formData)
+      .then((res) => {
+        console.log("success", res)
+        toast.success("You have successfully created your account")
+      })
+      .catch((err) => {
+        console.log("error", err)
+        toast.error(err.message)
+      })
   }
 
   function handlerChangeValue(e: ChangeEvent<HTMLInputElement>, fieldName: keyof z.infer<typeof registrationSchema>) {

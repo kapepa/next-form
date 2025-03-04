@@ -1,11 +1,14 @@
-import { NextAuthOptions } from "next-auth";
+import { NextAuthOptions, Session } from "next-auth";
 import GitHubProvider from "next-auth/providers/github";
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { registrationSchema } from "./schemas/registration-schema";
 import { ZodError, z } from "zod";
-import { fetchQuery } from "convex/nextjs";
+import { fetchQuery, fetchMutation } from "convex/nextjs";
 import { api } from "../../convex/_generated/api";
+import bcrypt from "bcrypt";
+import { JWT } from "next-auth/jwt";
+import { Routers } from "@/types/routers";
 
 export const authOptions: NextAuthOptions = {
   // Configure one or more authentication providers
@@ -26,24 +29,26 @@ export const authOptions: NextAuthOptions = {
         email: { label: "email", type: "email" },
         password: { label: "password", type: "password" },
       },
-      async authorize(credentials: Record<"name" | "email" | "password", string> | undefined) {
+      async authorize(credentials: Omit<z.infer<typeof registrationSchema>, "confirmPassword"> | undefined) {
         try {
-          let user = null
           const { name, email, password } = await registrationSchema.parseAsync(credentials);
 
+          // Check if a user with the same email already exists
           const existUser = await fetchQuery(api.user.getUserByEmail, { email });
+          if (existUser) return null;
 
-          console.log(existUser)
+          // Hash the password
+          const bcryptHash = await bcrypt.hash(password, 10);
 
-          // // logic to salt and hash password
-          // const pwHash = saltAndHashPassword(password)
+          // Create a new user
+          const { _creationTime, ...newUser } = await fetchMutation(api.user.createUser, { name, email, password: bcryptHash });
 
-          // // logic to verify if the user exists
-          // user = await getUserFromDb(email, pwHash)
-
-          // if (!user) throw new Error("Invalid credentials.")
-
-          return user
+          // Return the user object
+          return {
+            id: newUser._id,
+            name: newUser.name,
+            email: newUser.email,
+          };
         } catch (error) {
           if (error instanceof ZodError) {
             console.error("Validation error:", error.errors);
@@ -55,21 +60,32 @@ export const authOptions: NextAuthOptions = {
       },
     }),
   ],
-  // Customize pages (optional)
   pages: {
-    signIn: "/registration", // Custom sign-in page
+    signIn: Routers.login, // Custom sign-in page
+    error: Routers.AuthError, // Custom error page
+  },
+  secret: process.env.NEXT_AUTH_SECRET,
+  session: {
+    strategy: "jwt"
   },
   // Callbacks for customizing JWT and session behavior
   callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
-        token.id = user.id;
-      }
+    async jwt({ token }: { token: JWT }) {
+      if (!token.email) return token;
+
+      const existUser = await fetchQuery(api.user.getUserByEmail, { email: token.email });
+      if (!existUser) return token;
+
+      token.id = existUser._id;
+      token.name = existUser.name;
+
       return token;
     },
-    async session({ session, token }) {
-      // session.user.id = token.id;
-      return session;
+    async session({ session, token }: { session: Session, token: JWT }) {
+      if (!session.user) return session;
+      session.user.id = token._id as string;
+
+      return session
     },
   },
   // Enable debug messages in development
