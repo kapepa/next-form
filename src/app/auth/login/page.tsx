@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { loginSchema } from "@/lib/schemas/login-schema";
@@ -6,22 +6,56 @@ import { Routers } from "@/types/routers";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod"
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { useTransition } from "react";
+import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner"
 
 export default function LoginPage() {
+  const router = useRouter(); // Initialize the router
+  const [isPending, startTransition] = useTransition();
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: "",
-      password: "",
+      email: "karma@gmail.com",
+      password: "Uva123456",
     },
-  })
+  });
 
   function onSubmit(values: z.infer<typeof loginSchema>) {
-    console.log(values)
+    startTransition(async () => {
+      try {
+        const result = await signIn("credentials", {
+          ...values,
+          redirect: false, // Disable automatic redirection
+          callbackUrl: Routers.Home, // Redirect to home page after login
+        });
+
+        if (result?.error) {
+          form.setError("email", {
+            type: "manual",
+            message: "Invalid email",
+          });
+          form.setError("password", {
+            type: "manual",
+            message: "Invalid password",
+          });
+          toast.error("Invalid e-mail address or password")
+        } else {
+          router.push(result?.url || Routers.Home); // Redirect programmatically
+        }
+      } catch (err) {
+        console.error("Login error:", err);
+      }
+    });
+  }
+
+  function handlerReset() {
+    form.reset();
   }
 
   return (
@@ -58,6 +92,7 @@ export default function LoginPage() {
                       <Input
                         type="email"
                         placeholder="example@mail.com"
+                        disabled={isPending} // Pass disabled prop here
                         {...field}
                       />
                     </FormControl>
@@ -71,6 +106,7 @@ export default function LoginPage() {
               <FormField
                 control={form.control}
                 name="password"
+                disabled={isPending}
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Password</FormLabel>
@@ -94,11 +130,14 @@ export default function LoginPage() {
                 <Button
                   type="reset"
                   variant="secondary"
+                  disabled={isPending}
+                  onClick={handlerReset}
                 >
                   Reset
                 </Button>
                 <Button
                   type="submit"
+                  disabled={isPending}
                 >
                   Submit
                 </Button>
