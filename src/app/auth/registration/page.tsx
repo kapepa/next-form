@@ -11,12 +11,15 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod";
 import { registrationSchema } from "@/lib/schemas/registration-schema";
 import { useRegistrationStore } from "@/lib/store/useRegistrationStore";
-import { ChangeEvent } from "react";
-import { signIn } from "next-auth/react";
+import { ChangeEvent, useTransition } from "react";
 import { toast } from "sonner"
+import axiosInstance from "@/lib/axios";
+import { useRouter } from "next/navigation";
 
 export default function RegistrationPage() {
+  const router = useRouter();
   const { changeValues, ...other } = useRegistrationStore();
+  const [isPending, startTransition] = useTransition()
   const form = useForm<z.infer<typeof registrationSchema>>({
     resolver: zodResolver(registrationSchema),
     defaultValues: {
@@ -28,15 +31,18 @@ export default function RegistrationPage() {
   })
 
   async function onSubmit(formData: z.infer<typeof registrationSchema>) {
-    await signIn("credentials", formData)
-      .then((res) => {
-        console.log("success", res)
-        toast.success("You have successfully created your account")
-      })
-      .catch((err) => {
-        console.log("error", err)
-        toast.error(err.message)
-      })
+    startTransition(() => {
+      axiosInstance.post(
+        "/api/user", { name: formData.name, email: formData.email, password: formData.password })
+        .then(() => {
+          toast.success("You have successfully created an account")
+          handlerReset();
+          router.push(Routers.login)
+        })
+        .catch((err) => {
+          toast.error(err.response.data.message)
+        })
+    });
   }
 
   function handlerChangeValue(e: ChangeEvent<HTMLInputElement>, fieldName: keyof z.infer<typeof registrationSchema>) {
@@ -89,6 +95,7 @@ export default function RegistrationPage() {
                       <Input
                         type="text"
                         placeholder="Your name"
+                        disabled={isPending}
                         {...field}
                         onChange={(e) => {
                           field.onChange(e);
@@ -113,6 +120,7 @@ export default function RegistrationPage() {
                       <Input
                         type="email"
                         placeholder="example@mail.com"
+                        disabled={isPending}
                         {...field}
                         onChange={(e) => {
                           field.onChange(e);
@@ -137,6 +145,7 @@ export default function RegistrationPage() {
                       <Input
                         type="password"
                         placeholder="******"
+                        disabled={isPending}
                         {...field}
                         onChange={(e) => {
                           field.onChange(e);
@@ -181,12 +190,14 @@ export default function RegistrationPage() {
                 <Button
                   type="reset"
                   variant="secondary"
+                  disabled={isPending}
                   onClick={handlerReset}
                 >
                   Reset
                 </Button>
                 <Button
                   type="submit"
+                  disabled={isPending}
                 >
                   Submit
                 </Button>

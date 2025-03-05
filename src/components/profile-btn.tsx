@@ -1,10 +1,13 @@
+"use client";
+
 import { FC } from "react";
 import { Button } from "./ui/button";
 import { cn } from "@/lib/utils";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "./ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "./ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import Link from "next/link";
 import { Routers } from "@/types/routers";
+import { useSession, signOut } from "next-auth/react";
 
 interface ProfileBtnProps {
   className?: string
@@ -12,9 +15,9 @@ interface ProfileBtnProps {
 
 const ProfileBtn: FC<ProfileBtnProps> = (props) => {
   const { className } = props;
-  const isLogin: boolean = false;
+  const { data: session } = useSession();
 
-  if (!isLogin) {
+  if (!session) {
     return (
       <Button
         type="button"
@@ -29,6 +32,10 @@ const ProfileBtn: FC<ProfileBtnProps> = (props) => {
       </Button>
     )
   }
+
+  const handleLogout = async () => {
+    await signOut({ callbackUrl: Routers.login }); // Redirect to login page after logout
+  };
 
   return (
     <div
@@ -48,7 +55,20 @@ const ProfileBtn: FC<ProfileBtnProps> = (props) => {
         </DropdownMenuTrigger>
         <DropdownMenuContent>
           <DropdownMenuItem>Profile</DropdownMenuItem>
-          <DropdownMenuItem>Billing</DropdownMenuItem>
+
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            asChild
+          >
+            <Button
+              type="button"
+              variant="link"
+              onClick={handleLogout}
+              className="w-full flex justify-start cursor-pointer"
+            >
+              Logout
+            </Button>
+          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
     </div>

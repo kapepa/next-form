@@ -2,13 +2,13 @@ import { NextAuthOptions, Session } from "next-auth";
 import GitHubProvider from "next-auth/providers/github";
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
-import { registrationSchema } from "./schemas/registration-schema";
 import { ZodError, z } from "zod";
-import { fetchQuery, fetchMutation } from "convex/nextjs";
+import { fetchQuery } from "convex/nextjs";
 import { api } from "../../convex/_generated/api";
 import bcrypt from "bcrypt";
 import { JWT } from "next-auth/jwt";
 import { Routers } from "@/types/routers";
+import { loginSchema } from "./schemas/login-schema";
 
 export const authOptions: NextAuthOptions = {
   // Configure one or more authentication providers
@@ -25,29 +25,25 @@ export const authOptions: NextAuthOptions = {
     CredentialsProvider({
       name: "credentials",
       credentials: {
-        name: { label: "name", type: "text" },
         email: { label: "email", type: "email" },
         password: { label: "password", type: "password" },
       },
-      async authorize(credentials: Omit<z.infer<typeof registrationSchema>, "confirmPassword"> | undefined) {
+      async authorize(credentials: z.infer<typeof loginSchema> | undefined) {
         try {
-          const { name, email, password } = await registrationSchema.parseAsync(credentials);
+          const { email, password } = await loginSchema.parseAsync(credentials);
 
           // Check if a user with the same email already exists
           const existUser = await fetchQuery(api.user.getUserByEmail, { email });
-          if (existUser) return null;
+          if (!existUser) throw "User does not exist";
 
-          // Hash the password
-          const bcryptHash = await bcrypt.hash(password, 10);
-
-          // Create a new user
-          const { _creationTime, ...newUser } = await fetchMutation(api.user.createUser, { name, email, password: bcryptHash });
+          const compare = await bcrypt.compare(password, existUser.password);
+          if (!compare) throw "Password is not correct"
 
           // Return the user object
           return {
-            id: newUser._id,
-            name: newUser.name,
-            email: newUser.email,
+            id: existUser._id,
+            name: existUser.name,
+            email: existUser.email,
           };
         } catch (error) {
           if (error instanceof ZodError) {
@@ -61,7 +57,7 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   pages: {
-    signIn: Routers.login, // Custom sign-in page
+    signIn: Routers.login,
     error: Routers.AuthError, // Custom error page
   },
   secret: process.env.NEXT_AUTH_SECRET,
