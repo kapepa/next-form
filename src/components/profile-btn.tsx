@@ -1,23 +1,24 @@
 "use client";
 
-import { FC } from "react";
+import { FC, useCallback } from "react";
 import { Button } from "./ui/button";
 import { cn } from "@/lib/utils";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "./ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import Link from "next/link";
 import { Routers } from "@/types/routers";
-import { useSession, signOut } from "next-auth/react";
+import { signOut } from "next-auth/react";
+import { UserDtoType } from "../../dto/user.dto";
 
 interface ProfileBtnProps {
-  className?: string
+  className?: string,
+  profile?: UserDtoType | null
 }
 
 const ProfileBtn: FC<ProfileBtnProps> = (props) => {
-  const { className } = props;
-  const { data: session } = useSession();
+  const { profile, className } = props;
 
-  if (!session) {
+  if (!profile) {
     return (
       <Button
         type="button"
@@ -37,6 +38,10 @@ const ProfileBtn: FC<ProfileBtnProps> = (props) => {
     await signOut({ callbackUrl: Routers.login }); // Redirect to login page after logout
   };
 
+  const getFirstLetter = useCallback(() => {
+    return profile.name.charAt(0).toLocaleUpperCase()
+  }, [profile.name])
+
   return (
     <div
       className={cn(className)}
@@ -48,9 +53,9 @@ const ProfileBtn: FC<ProfileBtnProps> = (props) => {
         >
           <Avatar>
             <AvatarImage
-              src="https://github.com/shadcn.png"
+              src={profile?.avatar}
             />
-            <AvatarFallback>CN</AvatarFallback>
+            <AvatarFallback>{getFirstLetter()}</AvatarFallback>
           </Avatar>
         </DropdownMenuTrigger>
         <DropdownMenuContent>

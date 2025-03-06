@@ -8,5 +8,6 @@ export default defineSchema({
     password: v.string(),
     avatar: v.optional(v.string()),
     // Add other fields as needed
-  }).index("by_email", ["email"]), // Index for faster lookups by email
+  })
+    .index("by_email", ["email"]),
 });
