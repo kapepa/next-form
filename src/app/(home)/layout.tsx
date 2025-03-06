@@ -1,10 +1,13 @@
 import { HeaderNav } from "@/components/header-nav";
+import { useProfileMyselfServer } from "../hooks/use-profile-myself-server";
 
-export default function HomeLayout({
+export default async function HomeLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const { profile } = await useProfileMyselfServer();
+
   return (
     <div
       className="container mx-auto "
@@ -13,7 +16,9 @@ export default function HomeLayout({
         className="h-screen flex flex-col"
       >
         <div>
-          <HeaderNav />
+          <HeaderNav
+            profile={profile}
+          />
         </div>
         {children}
       </div>

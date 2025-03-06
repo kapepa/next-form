@@ -5,13 +5,15 @@ import Image from "next/image";
 import { Routers } from "@/types/routers";
 import { ProfileBtn } from "./profile-btn";
 import { cn } from "@/lib/utils";
+import { UserDtoType } from "../../dto/user.dto";
 
 interface HeaderNavProps {
-  className?: string
+  className?: string,
+  profile?: UserDtoType | null
 }
 
 const HeaderNav: FC<HeaderNavProps> = (props) => {
-  const { className } = props;
+  const { profile, className } = props;
 
   return (
     <div
@@ -37,7 +39,9 @@ const HeaderNav: FC<HeaderNavProps> = (props) => {
         <NavTop
           className="px-4 grow"
         />
-        <ProfileBtn />
+        <ProfileBtn
+          profile={profile}
+        />
       </div>
     </div>
   )

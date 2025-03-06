@@ -3,8 +3,6 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ConvexClientProvider } from "@/providers/convex-client-provider";
 import { Toaster } from "@/components/ui/sonner";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/auth";
 import { SessionClientProvider } from "@/providers/session-client-provider";
 
 const geistSans = Geist({
@@ -27,8 +25,6 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const session = await getServerSession(authOptions);
-
   return (
     <html lang="en">
       <body

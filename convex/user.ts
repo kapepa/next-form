@@ -35,3 +35,22 @@ export const createUser = mutation({
     }
   },
 });
+
+export const getUserById = query({
+  args: {
+    id: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const user = await ctx.db
+      .query("user")
+      .filter((q) => q.eq(q.field("_id"), args.id))
+      .unique();
+
+    if (!!user) {
+      const { password, _creationTime, ...profile } = user;
+      return profile
+    }
+
+    return null;
+  },
+});
