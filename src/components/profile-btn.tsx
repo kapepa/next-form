@@ -59,7 +59,16 @@ const ProfileBtn: FC<ProfileBtnProps> = (props) => {
           </Avatar>
         </DropdownMenuTrigger>
         <DropdownMenuContent>
-          <DropdownMenuItem>Profile</DropdownMenuItem>
+          <DropdownMenuItem
+            asChild
+          >
+            <Link
+              href={Routers.Profile}
+              className="cursor-pointer"
+            >
+              Profile
+            </Link>
+          </DropdownMenuItem>
 
           <DropdownMenuSeparator />
           <DropdownMenuItem
