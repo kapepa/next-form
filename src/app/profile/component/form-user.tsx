@@ -11,6 +11,9 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { InputAvatart } from "@/components/input-avatart";
+import axiosInstance from "@/lib/axios";
+import { toast } from "sonner";
 
 interface FormUserProps {
   profile: UserDtoType
@@ -62,10 +65,30 @@ const FormUser: FC<FormUserProps> = (props) => {
     return <div>Loading...</div>;
   }
 
+  function toFormData(values: z.infer<typeof profileSchema>) {
+    const profile = props.profile;
+    const asssign = Object.assign(profile, values)
+    const formData = new FormData();
+
+    for (const key of Object.keys(asssign) as (keyof z.infer<typeof profileSchema>)[]) {
+      if (key === "_id") continue;
+      const fildValue = asssign[key];
+      if (fildValue) formData.set(key, fildValue);
+    }
+
+    return formData;
+  }
 
   function onSubmit(values: z.infer<typeof profileSchema>) {
     startTransition(() => {
-      console.log(values)
+      const formData = toFormData(values)
+      axiosInstance.post(`/api/user/${values._id}`, formData, { headers: { "Content-Type": "multipart/form-data", } })
+        .then(() => {
+          toast.success("The user has been successfully updated!")
+        })
+        .catch(() => {
+          toast.error("Something went wrong")
+        })
     })
   }
 
@@ -138,12 +161,11 @@ const FormUser: FC<FormUserProps> = (props) => {
                     <FormItem>
                       <FormLabel>Avatar</FormLabel>
                       <FormControl>
-                        <Input
-                          type="file"
-                          accept="image/*"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            field.onChange(file);
+                        <InputAvatart
+                          profileName={form.getValues("name")}
+                          avatar={field.value}
+                          onLoadAvatart={(file: File) => {
+                            field.onChange(file)
                           }}
                         />
                       </FormControl>
@@ -151,26 +173,6 @@ const FormUser: FC<FormUserProps> = (props) => {
                     </FormItem>
                   )}
                 />
-                {form.watch("avatar") && (
-                  <img
-                    src={URL.createObjectURL(form.watch("avatar"))}
-                    alt="Avatar Preview"
-                    className="w-24 h-24 rounded-full"
-                  />
-                )}
-                {/* {form.watch("avatar") instanceof File ? (
-                  <img
-                    src={URL.createObjectURL(form.watch("avatar"))}
-                    alt="Avatar Preview"
-                    className="w-24 h-24 rounded-full"
-                  />
-                ) : typeof form.watch("avatar") === "string" ? (
-                  <img
-                    src={form.watch("avatar") ?? ""}
-                    alt="Existing Avatar"
-                    className="w-24 h-24 rounded-full"
-                  />
-                ) : null} */}
               </div>
               <FormField
                 control={form.control}
