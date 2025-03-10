@@ -36,6 +36,36 @@ export const createUser = mutation({
   },
 });
 
+export const updateUser = mutation({
+  args: {
+    id: v.id("user"),
+    updates: v.object({
+      _id: v.optional(v.id("user")),
+      name: v.optional(v.string()),
+      email: v.optional(v.string()),
+      avatar: v.optional(v.string()),
+      password: v.optional(v.string()),
+    }),
+  },
+  handler: async (ctx, args) => {
+    try {
+      const { id, updates } = args;
+      await ctx.db.patch(id, updates);
+
+      const updatedUser = await ctx.db.get(id);
+      if (updatedUser) {
+        const { password, _creationTime, ...profile } = updatedUser;
+        return profile
+      }
+
+      return updatedUser;
+    } catch (err) {
+      console.error(err)
+      return err
+    }
+  }
+})
+
 export const getUserById = query({
   args: {
     id: v.string(),
@@ -52,5 +82,17 @@ export const getUserById = query({
     }
 
     return null;
+  },
+});
+
+export const getProfileById = query({
+  args: {
+    id: v.string(),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("user")
+      .filter((q) => q.eq(q.field("_id"), args.id))
+      .unique();
   },
 });

@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { IncomingForm } from "formidable";
 import fs from "fs/promises";
 import path from "path";
 import { fetchQuery, fetchMutation } from "convex/nextjs";
 import { api } from "../../../../../convex/_generated/api";
 import bcrypt from "bcrypt";
+import { v4 as uuidv4 } from 'uuid';
+import { Id } from "../../../../../convex/_generated/dataModel";
 
 export const config = {
   api: {
@@ -14,35 +15,54 @@ export const config = {
 
 export async function POST(req: NextRequest) {
   try {
-    const id = req.nextUrl.pathname.split("/").pop(); // Extract the `id` from the URL
-    console.log("User ID:", id);
-
-    // Parse the form data
+    const id = req.nextUrl.pathname.split("/").pop() as Id<"user">;
     const formData = await req.formData();
-    console.log("formData", formData)
     const file = formData.get("avatar") as File | null;
 
-    if (!file) throw new Error("No file uploaded");
 
-    // Save the file to the `public/uploads` directory
-    const uploadDir = path.join(process.cwd(), "public/uploads");
-    await fs.mkdir(uploadDir, { recursive: true }); // Create the directory if it doesn't exist
+    if (id !== formData.get("_id")) throw "Invalid user ID";
 
-    const filePath = path.join(uploadDir, file.name);
-    const buffer = Buffer.from(await file.arrayBuffer());
-    await fs.writeFile(filePath, buffer);
+    const userUpdate = await fetchQuery(api.user.getProfileById, { id })
+    if (!userUpdate) throw "User not found";
 
-    const avatarUrl = `/uploads/${path.basename(filePath)}`; // Relative path for the avatar URL
-    console.log("Avatar URL:", avatarUrl);
+    const fields: Record<string, string | File> = {};
+    for (const [key, value] of formData.entries()) fields[key] = value;
 
-    // Example database function
-    // await updateUserAvatar(id, avatarUrl);
+    if (!!file) {
+      if (!!userUpdate?.avatar) {
+        const oldAvatarPath = path.join(process.cwd(), "public", userUpdate.avatar);
+        await fs.unlink(oldAvatarPath);
+      }
+      const uploadDir = path.join(process.cwd(), "public/avatars");
+      const extend = file.name.split(".").pop();
+      const fileName = `${uuidv4()}.${extend}`;
+      await fs.mkdir(uploadDir, { recursive: true }); // Create the directory if it doesn't exist
+
+      const filePath = path.join(uploadDir, fileName);
+      const buffer = Buffer.from(await file.arrayBuffer());
+      await fs.writeFile(filePath, buffer);
+
+      fields["avatar"] = `/avatars/${fileName}`;
+    };
+
+    if (fields["password"] && typeof fields["password"] === "string") {
+      const password = fields["password"];
+      const compare = await bcrypt.compare(password, userUpdate.password)
+      if (!compare) throw "There's something wrong with the password"
+
+      const hashPassword = await bcrypt.hash(fields["newPassword"] as string, 10) as string
+      fields["password"] = hashPassword
+    }
+
+
+    const user = await fetchMutation(api.user.updateUser, { id, updates: fields })
 
     return NextResponse.json(
-      { success: true, avatarUrl },
+      { success: true },
       { status: 200 }
     );
   } catch (error) {
+    console.error(error)
     return NextResponse.json(
       { success: false, message: error },
       { status: 500 }
