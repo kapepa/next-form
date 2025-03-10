@@ -14,12 +14,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { InputAvatart } from "@/components/input-avatart";
 import axiosInstance from "@/lib/axios";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 interface FormUserProps {
   profile: UserDtoType
 }
 
 const FormUser: FC<FormUserProps> = (props) => {
+  const router = useRouter();
   const [isPending, startTransition] = useTransition()
   const { profile, setValue, setProfile } = usePfofileStore();
 
@@ -67,13 +69,12 @@ const FormUser: FC<FormUserProps> = (props) => {
 
   function toFormData(values: z.infer<typeof profileSchema>) {
     const profile = props.profile;
-    const asssign = Object.assign(profile, values)
+    const asssign = Object.assign(JSON.parse(JSON.stringify(profile)), values)
     const formData = new FormData();
 
     for (const key of Object.keys(asssign) as (keyof z.infer<typeof profileSchema>)[]) {
-      if (key === "_id") continue;
       const fildValue = asssign[key];
-      if (fildValue) formData.set(key, fildValue);
+      if (fildValue && fildValue !== profile[key as keyof UserDtoType] || key === "_id") formData.set(key, fildValue);
     }
 
     return formData;
@@ -84,7 +85,8 @@ const FormUser: FC<FormUserProps> = (props) => {
       const formData = toFormData(values)
       axiosInstance.post(`/api/user/${values._id}`, formData, { headers: { "Content-Type": "multipart/form-data", } })
         .then(() => {
-          toast.success("The user has been successfully updated!")
+          toast.success("The user has been successfully updated!");
+          router.refresh()
         })
         .catch(() => {
           toast.error("Something went wrong")

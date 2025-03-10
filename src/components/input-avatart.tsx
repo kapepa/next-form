@@ -36,6 +36,7 @@ const InputAvatart: FC<InputAvatartProps> = (props) => {
     }
   };
 
+
   return (
     <div className="flex gap-x-6 justify-between">
       <div>

@@ -54,6 +54,7 @@ const ProfileBtn: FC<ProfileBtnProps> = (props) => {
           <Avatar>
             <AvatarImage
               src={profile?.avatar}
+              className="object-cover"
             />
             <AvatarFallback>{getFirstLetter()}</AvatarFallback>
           </Avatar>
