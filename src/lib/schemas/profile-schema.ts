@@ -5,6 +5,7 @@ export const profileSchema = z.object({
   _id: z.custom<Id<"user">>(),
   name: z.string().min(1, { message: 'Name is required' }),
   email: z.string().email({ message: 'Invalid email address' }),
+  role: z.enum(["admin", "user"]).default("user"),
   avatar: z.union([z.instanceof(File), z.string()]).optional(),
   password: z.string().optional(), // Password is optional
   newPassword: z.string().optional(), // New password is optional
@@ -34,3 +35,5 @@ export const profileSchema = z.object({
     path: ["confirmPassword"], // Highlight the confirmPassword field if validation fails
   }
 );
+
+export type ProfileRoleList = z.infer<typeof profileSchema>["role"];

@@ -54,8 +54,7 @@ export async function POST(req: NextRequest) {
       fields["password"] = hashPassword
     }
 
-
-    const user = await fetchMutation(api.user.updateUser, { id, updates: fields })
+    await fetchMutation(api.user.updateUser, { id, updates: fields })
 
     return NextResponse.json(
       { success: true },

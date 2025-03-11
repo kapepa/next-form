@@ -3,7 +3,7 @@
 import { FC, useEffect, useTransition } from "react";
 import { UserDtoType } from "../../../../dto/user.dto";
 import { usePfofileStore } from "@/lib/store/use-pfofile-store";
-import { profileSchema } from "@/lib/schemas/profile-schema";
+import { ProfileRoleList, profileSchema } from "@/lib/schemas/profile-schema";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -15,10 +15,13 @@ import { InputAvatart } from "@/components/input-avatart";
 import axiosInstance from "@/lib/axios";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface FormUserProps {
   profile: UserDtoType
 }
+
+const profileRoles: ProfileRoleList[] = ["user", "admin"]
 
 const FormUser: FC<FormUserProps> = (props) => {
   const router = useRouter();
@@ -30,6 +33,7 @@ const FormUser: FC<FormUserProps> = (props) => {
     defaultValues: {
       _id: "",
       name: "",
+      role: "user",
       email: "",
       avatar: "",
       password: "",
@@ -44,6 +48,7 @@ const FormUser: FC<FormUserProps> = (props) => {
       form.reset({
         _id: props.profile?._id,
         name: props.profile?.name || "",
+        role: props.profile?.role || "user",
         email: props.profile?.email || "",
         avatar: props.profile?.avatar || "",
         password: "",
@@ -54,6 +59,7 @@ const FormUser: FC<FormUserProps> = (props) => {
       form.reset({
         _id: profile._id,
         name: profile.name,
+        role: profile.role || "user",
         email: profile.email,
         avatar: profile.avatar,
         password: profile.password,
@@ -92,6 +98,12 @@ const FormUser: FC<FormUserProps> = (props) => {
           toast.error("Something went wrong")
         })
     })
+  }
+
+  function firstLetterUp(text: string) {
+    const getFirstLetter = text.charAt(0).toLocaleUpperCase();
+    const getBaseWord = text.substring(1)
+    return `${getFirstLetter}${getBaseWord}`;
   }
 
   return (
@@ -155,27 +167,57 @@ const FormUser: FC<FormUserProps> = (props) => {
                   </FormItem>
                 )}
               />
-              <div>
-                <FormField
-                  control={form.control}
-                  name="avatar"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Avatar</FormLabel>
+              <FormField
+                control={form.control}
+                name="avatar"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Avatar</FormLabel>
+                    <FormControl>
+                      <InputAvatart
+                        profileName={form.getValues("name")}
+                        avatar={field.value}
+                        onLoadAvatart={(file: File) => {
+                          field.onChange(file)
+                        }}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="role"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Role</FormLabel>
+                    <Select
+                      defaultValue={field.value}
+                      onValueChange={field.onChange}
+                    >
                       <FormControl>
-                        <InputAvatart
-                          profileName={form.getValues("name")}
-                          avatar={field.value}
-                          onLoadAvatart={(file: File) => {
-                            field.onChange(file)
-                          }}
-                        />
+                        <SelectTrigger>
+                          <SelectValue placeholder={field.value} />
+                        </SelectTrigger>
                       </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+                      <SelectContent>
+                        {
+                          profileRoles.map((role, index) => (
+                            <SelectItem
+                              key={`${role}-${index}`}
+                              value={role}
+                            >
+                              {firstLetterUp(role)}
+                            </SelectItem>
+                          ))
+                        }
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <FormField
                 control={form.control}
                 name="password"

@@ -1,4 +1,4 @@
-import { useProfileMyselfServer } from "../hooks/use-profile-myself-server";
+import { useProfileMyselfServer } from "../../hooks/use-profile-myself-server";
 import { FormUser } from "./component/form-user";
 
 export default async function Profile(props: any) {

@@ -1,7 +1,7 @@
 import { HeaderNav } from "@/components/header-nav";
 import { useProfileMyselfServer } from "../../hooks/use-profile-myself-server";
 
-export default async function HomeLayout({
+export default async function EditorLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;

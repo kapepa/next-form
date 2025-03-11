@@ -6,7 +6,7 @@ export const getUserByEmail = query({
     email: v.string(), // Email is a required string argument
   },
   handler: async (ctx, args) => {
-    // Query the "users" table for a user with the given email
+    // Query the "user" table for a user with the given email
     const user = await ctx.db
       .query("user")
       .filter((q) => q.eq(q.field("email"), args.email))
@@ -20,7 +20,7 @@ export const createUser = mutation({
   handler: async (ctx, args) => {
     try {
       // Insert the new user into the database
-      const userId = await ctx.db.insert("user", args);
+      const userId = await ctx.db.insert("user", { ...args, role: "user" });
 
       // Fetch the newly created user by ID
       const user = await ctx.db.get(userId);
@@ -42,6 +42,7 @@ export const updateUser = mutation({
     updates: v.object({
       _id: v.optional(v.id("user")),
       name: v.optional(v.string()),
+      role: v.optional(v.union(v.literal("admin"), v.literal("user"))),
       email: v.optional(v.string()),
       avatar: v.optional(v.string()),
       password: v.optional(v.string()),

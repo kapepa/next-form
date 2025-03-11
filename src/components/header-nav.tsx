@@ -38,6 +38,7 @@ const HeaderNav: FC<HeaderNavProps> = (props) => {
       >
         <NavTop
           className="px-4 grow"
+          profile={profile}
         />
         <ProfileBtn
           profile={profile}
