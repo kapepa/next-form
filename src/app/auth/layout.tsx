@@ -1,5 +1,3 @@
-import { HeaderNav } from "@/components/header-nav";
-
 export default function AuthLayout({
   children,
 }: Readonly<{

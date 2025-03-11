@@ -4,10 +4,11 @@ import { v } from "convex/values";
 export default defineSchema({
   user: defineTable({
     name: v.string(),
+    role: v.union(v.literal("admin"), v.literal("user")),
     email: v.string(),
-    password: v.string(),
     avatar: v.optional(v.string()),
-    // Add other fields as needed
+    password: v.string(),
   })
-    .index("by_email", ["email"]),
+    .index("by_email", ["email"])
+    .index("by_role", ["role"]),
 });

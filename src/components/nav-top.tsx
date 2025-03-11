@@ -6,16 +6,16 @@ import { Button } from "./ui/button";
 import Link from "next/link";
 import { Routers } from "@/types/routers";
 import { usePathname } from 'next/navigation';
-import { useUserSessionClient } from "@/app/hooks/use-user-session-client";
+import { UserDtoType } from "../../dto/user.dto";
 
 interface INavTop {
   className?: string,
+  profile?: UserDtoType | null
 }
 
 const NavTop: FC<INavTop> = (props) => {
-  const { className } = props;
+  const { profile, className } = props;
   const pathname = usePathname();
-  const { user } = useUserSessionClient()
 
   return (
     <nav
@@ -38,7 +38,7 @@ const NavTop: FC<INavTop> = (props) => {
         </Link>
       </Button>
       {
-        !!user
+        !!profile
         && (
           <Button
             type="button"
@@ -51,6 +51,24 @@ const NavTop: FC<INavTop> = (props) => {
               }
             >
               Profile
+            </Link>
+          </Button>
+        )
+      }
+      {
+        (profile?.role && profile?.role === "admin")
+        && (
+          <Button
+            type="button"
+            variant="link"
+          >
+            <Link
+              href={Routers.Editor}
+              className={
+                cn(pathname === Routers.Editor ? "underline" : "")
+              }
+            >
+              Editor
             </Link>
           </Button>
         )

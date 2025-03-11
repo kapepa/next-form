@@ -1,7 +1,7 @@
 import { authOptions } from "@/lib/auth";
 import { fetchQuery } from "convex/nextjs";
 import { getServerSession } from "next-auth";
-import { api } from "../../../convex/_generated/api";
+import { api } from "../../convex/_generated/api";
 import { redirect } from "next/navigation";
 import { Routers } from "@/types/routers";
 

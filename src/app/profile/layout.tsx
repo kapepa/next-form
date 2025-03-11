@@ -1,7 +1,7 @@
 import { HeaderNav } from "@/components/header-nav";
 import { Routers } from "@/types/routers";
 import { redirect } from "next/navigation";
-import { useProfileMyselfServer } from "../hooks/use-profile-myself-server";
+import { useProfileMyselfServer } from "../../hooks/use-profile-myself-server";
 
 export default async function ProfileLayout({
   children,
