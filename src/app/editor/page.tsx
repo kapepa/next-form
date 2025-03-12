@@ -8,7 +8,7 @@ const EditorPage: NextPage = () => {
       className="flex justify-center items-center grow"
     >
       <Card
-        className="w-full max-w-xl"
+        className="w-full max-w-6xl"
       >
         <CardHeader>
           <CardTitle
