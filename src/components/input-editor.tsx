@@ -1,19 +1,23 @@
 "use client";
 
-import { FC } from "react";
+import { forwardRef, useImperativeHandle } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { Bold, Italic, Heading1, Heading2, List, ListOrdered } from "lucide-react";
 import { Button } from "./ui/button";
+
+export type InputEditorRef = {
+  reset: () => void;
+}
 
 interface InputEditorProps {
   content: string;
   onChange: (value: string) => void;
 }
 
-const InputEditor: FC<InputEditorProps> = ({ content, onChange }) => {
+const InputEditor = forwardRef<InputEditorRef, InputEditorProps>((props, ref) => {
+  const { content, onChange } = props;
   const editor = useEditor({
-    //when use useEditor i have error Tiptap Error: SSR has been detected, please set `immediatelyRender` explicitly to `false` to avoid hydration mismatches
     extensions: [StarterKit],
     content: content,
     onUpdate: ({ editor }) => {
@@ -22,6 +26,12 @@ const InputEditor: FC<InputEditorProps> = ({ content, onChange }) => {
     },
     immediatelyRender: false,
   });
+
+  useImperativeHandle(ref, () => ({
+    reset: () => {
+      editor?.commands.clearContent();
+    },
+  }));
 
   return (
     <div className="border rounded-md">
@@ -81,6 +91,6 @@ const InputEditor: FC<InputEditorProps> = ({ content, onChange }) => {
       <EditorContent editor={editor} className="p-4 min-h-[200px]" />
     </div>
   );
-};
+});
 
 export { InputEditor };

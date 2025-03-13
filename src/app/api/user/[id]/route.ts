@@ -7,12 +7,6 @@ import bcrypt from "bcrypt";
 import { v4 as uuidv4 } from 'uuid';
 import { Id } from "../../../../../convex/_generated/dataModel";
 
-export const config = {
-  api: {
-    bodyParser: false, // Disable the default body parser
-  },
-};
-
 export async function POST(req: NextRequest) {
   try {
     const id = req.nextUrl.pathname.split("/").pop() as Id<"user">;
@@ -36,7 +30,7 @@ export async function POST(req: NextRequest) {
       const uploadDir = path.join(process.cwd(), "public/avatars");
       const extend = file.name.split(".").pop();
       const fileName = `${uuidv4()}.${extend}`;
-      await fs.mkdir(uploadDir, { recursive: true }); // Create the directory if it doesn't exist
+      await fs.mkdir(uploadDir, { recursive: true });
 
       const filePath = path.join(uploadDir, fileName);
       const buffer = Buffer.from(await file.arrayBuffer());
