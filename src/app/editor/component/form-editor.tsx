@@ -1,28 +1,54 @@
 "use client";
 
-import { InputEditor } from "@/components/input-editor";
-import { InputImages } from "@/components/input-images";
+import { InputEditor, InputEditorRef } from "@/components/input-editor";
+import { InputImages, InputImagesRef } from "@/components/input-images";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import axiosInstance from "@/lib/axios";
+import { formData } from "@/lib/form-data";
 import { postSchema } from "@/lib/schemas/post-schema";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { FC } from "react";
+import { FC, useRef, useTransition } from "react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { z } from "zod";
 
 const FormEditor: FC = () => {
+  const inputImagesRef = useRef<InputImagesRef>(null);
+  const inputEditorRef = useRef<InputEditorRef>(null);
+  const [isPending, startTransition] = useTransition();
   const form = useForm<z.infer<typeof postSchema>>({
     resolver: zodResolver(postSchema),
     defaultValues: {
-      title: "",
+      title: "My text post",
       images: [],
-      content: "", // Default value for content
+      content: "Something to describe!",
     },
   });
 
+  function handlerResetForm() {
+    form.reset(); // Reset the form
+    inputImagesRef.current?.reset(); // Reset InputImages
+    inputEditorRef.current?.reset()
+  }
+
   function onSubmit(values: z.infer<typeof postSchema>) {
-    console.log(values); // Log form values (including Tiptap content)
+    startTransition(() => {
+      const data = formData(values);
+
+      axiosInstance.post("/api/post", data, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      })
+        .then(() => {
+          toast.success("The post was successfully created");
+        })
+        .catch((err) => {
+          toast.error(err.message);
+        });
+    });
   }
 
   return (
@@ -37,7 +63,11 @@ const FormEditor: FC = () => {
                 <FormItem>
                   <FormLabel>Title</FormLabel>
                   <FormControl>
-                    <Input placeholder="Title post" {...field} />
+                    <Input
+                      disabled={isPending}
+                      placeholder="Title post"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -51,8 +81,10 @@ const FormEditor: FC = () => {
                   <FormLabel>Images</FormLabel>
                   <FormControl>
                     <InputImages
+                      ref={inputImagesRef}
+                      disabled={isPending}
                       images={field.value}
-                      onChange={(files: File[]) => { field.onChange(files) }}
+                      onChange={(files: File[]) => field.onChange(files)}
                     />
                   </FormControl>
                   <FormMessage />
@@ -67,6 +99,7 @@ const FormEditor: FC = () => {
                   <FormLabel>Content</FormLabel>
                   <FormControl>
                     <InputEditor
+                      ref={inputEditorRef}
                       content={form.watch("content")}
                       onChange={(value) => field.onChange(value)}
                     />
@@ -75,8 +108,22 @@ const FormEditor: FC = () => {
                 </FormItem>
               )}
             />
-
-            <Button type="submit">Submit</Button>
+            <div className="flex gap-x-6">
+              <Button
+                type="reset"
+                variant="secondary"
+                disabled={isPending}
+                onClick={handlerResetForm}
+              >
+                Reset
+              </Button>
+              <Button
+                type="submit"
+                disabled={isPending}
+              >
+                Submit
+              </Button>
+            </div>
           </form>
         </Form>
       </div>

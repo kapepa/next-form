@@ -11,4 +11,15 @@ export default defineSchema({
   })
     .index("by_email", ["email"])
     .index("by_role", ["role"]),
+
+  post: defineTable({
+    title: v.string(),
+    content: v.string(),
+    images: v.array(v.string()),
+    authorId: v.id("user"),
+    createdAt: v.number(),
+    updatedAt: v.optional(v.number()),
+  })
+    .index("by_authorId", ["authorId"])
+    .index("by_createdAt", ["createdAt"]),
 });
