@@ -6,15 +6,18 @@ import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import axiosInstance from "@/lib/axios";
-import { formData } from "@/lib/form-data";
+import { transformationToFormData } from "@/lib/form-data";
 import { postSchema } from "@/lib/schemas/post-schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { FC, useRef, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { useRouter } from 'next/navigation';
 import { z } from "zod";
+import { Routers } from "@/types/routers";
 
 const FormEditor: FC = () => {
+  const router = useRouter();
   const inputImagesRef = useRef<InputImagesRef>(null);
   const inputEditorRef = useRef<InputEditorRef>(null);
   const [isPending, startTransition] = useTransition();
@@ -35,15 +38,16 @@ const FormEditor: FC = () => {
 
   function onSubmit(values: z.infer<typeof postSchema>) {
     startTransition(() => {
-      const data = formData(values);
+      const data = transformationToFormData(values);
 
       axiosInstance.post("/api/post", data, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
       })
-        .then(() => {
+        .then((response) => {
           toast.success("The post was successfully created");
+          router.push(`${Routers.Editor}/${response.data.postId}`);
         })
         .catch((err) => {
           toast.error(err.message);

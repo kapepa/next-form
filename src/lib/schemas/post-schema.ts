@@ -1,18 +1,20 @@
 import { z } from "zod";
 
+// Custom schema for validating files
 const fileSchema = z.custom<File>((val) => val instanceof File, {
   message: "Expected a file",
-}).refine((file) => file.size <= 5 * 1024 * 1024, {
+}).refine((file) => file.size <= 5 * 1024 * 1024, { // 5MB in bytes
   message: "File size must be less than 5MB",
 }).refine((file) => file.type.startsWith("image/"), {
   message: "Only image files are allowed",
 });
 
+// Schema for the post
 export const postSchema = z.object({
   title: z
     .string()
     .min(1, "Title is required")
     .max(100, "Title is too long"),
-  images: z.array(fileSchema), // Use the custom file schema
+  images: z.array(fileSchema), // Array of validated image files
   content: z.string().min(1, "Content is required"),
 });

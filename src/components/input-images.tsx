@@ -23,16 +23,12 @@ const InputImages = forwardRef<InputImagesRef, InputImagesProps>((props, ref) =>
   const handlerChangeImage = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const filesStore = JSON.parse(JSON.stringify(files));
-      const urlsStore = urls.concat([]);
-      const url = URL.createObjectURL(file);
+      const newFiles = [...files, file];
+      const newUrls = [...urls, URL.createObjectURL(file)];
 
-      filesStore.push(file);
-      urlsStore.push(url);
-
-      onChange(filesStore);
-      setFiles(filesStore);
-      setUrls(urlsStore);
+      onChange(newFiles);
+      setFiles(newFiles);
+      setUrls(newUrls);
     }
   };
 
