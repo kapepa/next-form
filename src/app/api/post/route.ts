@@ -53,13 +53,11 @@ export async function POST(req: NextRequest) {
       authorId: user.id as Id<"user">, // Required
     };
 
-    // console.log(postData)
-
     // Call the Convex mutation to create the post
-    // const createPost = await fetchMutation(api.post.createPost, postData);
+    const createPost = await fetchMutation(api.post.createPost, postData);
 
     return NextResponse.json(
-      { success: true },
+      { success: true, postId: createPost },
       { status: 201 }
     );
   } catch (error) {

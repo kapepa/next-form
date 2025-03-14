@@ -1,4 +1,4 @@
-export function formData<T extends Record<string, any>>(obj: T): FormData {
+export function transformationToFormData<T extends Record<string, any>>(obj: T): FormData {
   const form = new FormData();
 
   for (const key in obj) {
