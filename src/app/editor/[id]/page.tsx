@@ -1,10 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { NextPage } from "next";
 import { FormEditor } from "../component/form-editor";
-import { redirect } from "next/navigation";
-import { Routers } from "@/types/routers";
-import { UserDtoType } from "../../../../dto/user.dto";
-import { useProfileMyselfServer } from "@/hooks/use-profile-myself-server";
+import { useGetOwnPostById } from "@/hooks/use-get-own-post-by-id";
 
 interface EditorIdPageProps {
   params: {
@@ -13,14 +10,10 @@ interface EditorIdPageProps {
 }
 
 const EditorIdPage: NextPage<EditorIdPageProps> = async (props) => {
-  const { params: { id } } = props;
-  const { profile } = await useProfileMyselfServer();
+  const { params } = props;
+  const { id } = await params;
 
-
-
-  // console.log("id", id)
-  console.log("profile", props)
-
+  const { post } = await useGetOwnPostById(id);
 
   return (
     <div
@@ -42,7 +35,9 @@ const EditorIdPage: NextPage<EditorIdPageProps> = async (props) => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <FormEditor />
+          <FormEditor
+            post={post}
+          />
         </CardContent>
       </Card>
     </div>

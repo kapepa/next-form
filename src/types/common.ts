@@ -1,0 +1,1 @@
+export type StringOrFile = string | File;

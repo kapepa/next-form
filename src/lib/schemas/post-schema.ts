@@ -15,6 +15,11 @@ export const postSchema = z.object({
     .string()
     .min(1, "Title is required")
     .max(100, "Title is too long"),
-  images: z.array(fileSchema), // Array of validated image files
+  images: z.array(
+    z.union([
+      fileSchema, // Accepts File objects
+      z.string().min(1, "File path or URL is required"), // Accepts any non-empty string
+    ])
+  ),
   content: z.string().min(1, "Content is required"),
 });
