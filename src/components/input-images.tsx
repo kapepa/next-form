@@ -3,22 +3,25 @@
 import { ChangeEvent, FC, forwardRef, useImperativeHandle, useRef, useState } from "react";
 import { Button } from "./ui/button";
 import { Plus, X } from "lucide-react";
+import { StringOrFile } from "@/types/common";
 
 export type InputImagesRef = {
   reset: () => void;
 };
 
 interface InputImagesProps {
-  images: File[];
+  images: StringOrFile[];
   disabled: boolean;
-  onChange: (files: File[]) => void;
+  onChange: (files: StringOrFile[]) => void;
 }
 
 const InputImages = forwardRef<InputImagesRef, InputImagesProps>((props, ref) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const { images, disabled, onChange } = props;
-  const [urls, setUrls] = useState<string[]>([]);
-  const [files, setFiles] = useState<File[]>(() => images);
+  const [urls, setUrls] = useState<string[]>(() => {
+    return images.filter((image): image is string => typeof image === "string");
+  });
+  const [files, setFiles] = useState<StringOrFile[]>(() => images);
 
   const handlerChangeImage = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

@@ -30,7 +30,7 @@ export const getPostById = query({
   },
 });
 
-export const getPostsByUser = query({
+export const getPostsByUserId = query({
   args: {
     authorId: v.id("user"),
   },
@@ -56,5 +56,22 @@ export const getPostsWithAuthors = query({
       })
     );
     return postsWithAuthors;
+  },
+});
+
+export const getPostsByIdAndUserById = query({
+  args: {
+    _id: v.id("post"),
+    authorId: v.id("user"),
+  },
+  handler: async (ctx, args) => {
+    // Fetch the post by its ID and authorId
+    const post = await ctx.db
+      .query("post")
+      .withIndex("by_authorId", (q) => q.eq("authorId", args.authorId))
+      .filter((q) => q.eq(q.field("_id"), args._id)) // Filter by post ID
+      .unique(); // Ensure only one post is returned
+
+    return post;
   },
 });

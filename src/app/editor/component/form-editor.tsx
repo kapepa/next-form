@@ -15,8 +15,15 @@ import { toast } from "sonner";
 import { useRouter } from 'next/navigation';
 import { z } from "zod";
 import { Routers } from "@/types/routers";
+import { Doc } from "../../../../convex/_generated/dataModel";
+import { StringOrFile } from "@/types/common";
 
-const FormEditor: FC = () => {
+interface FormEditorProps {
+  post?: Doc<"post">,
+}
+
+const FormEditor: FC<FormEditorProps> = (props) => {
+  const { post } = props;
   const router = useRouter();
   const inputImagesRef = useRef<InputImagesRef>(null);
   const inputEditorRef = useRef<InputEditorRef>(null);
@@ -24,9 +31,9 @@ const FormEditor: FC = () => {
   const form = useForm<z.infer<typeof postSchema>>({
     resolver: zodResolver(postSchema),
     defaultValues: {
-      title: "My text post",
-      images: [],
-      content: "Something to describe!",
+      title: post?.title ?? "",
+      images: !!post?.images.length ? post?.images : [],
+      content: post?.content ?? "Something to describe!",
     },
   });
 
@@ -88,7 +95,7 @@ const FormEditor: FC = () => {
                       ref={inputImagesRef}
                       disabled={isPending}
                       images={field.value}
-                      onChange={(files: File[]) => field.onChange(files)}
+                      onChange={(files: StringOrFile[]) => field.onChange(files)}
                     />
                   </FormControl>
                   <FormMessage />
