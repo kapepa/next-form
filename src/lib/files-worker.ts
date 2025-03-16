@@ -34,3 +34,7 @@ export async function writeFiles({ files, folder }: { files: File[], folder: str
 
   return names
 }
+
+export async function deleteFile(urls: string[]) {
+
+}

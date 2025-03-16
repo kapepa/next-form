@@ -6,4 +6,5 @@ type CreatePost = Pick<Post, "content" | "title">
 export interface ICreatePostDto extends CreatePost {
   authorId?: Id<"user">
   images?: string[]
+  urls?: string[]
 }

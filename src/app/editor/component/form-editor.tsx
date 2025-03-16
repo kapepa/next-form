@@ -47,18 +47,33 @@ const FormEditor: FC<FormEditorProps> = (props) => {
     startTransition(() => {
       const data = transformationToFormData(values);
 
-      axiosInstance.post("/api/post", data, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      })
-        .then((response) => {
-          toast.success("The post was successfully created");
-          router.push(`${Routers.Editor}/${response.data.postId}`);
+      if (!!post) {
+        axiosInstance.patch(`/api/post/${post._id}`, data, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
         })
-        .catch((err) => {
-          toast.error(err.message);
-        });
+          .then((response) => {
+            toast.success("The post was successfully updated");
+            // router.push(`${Routers.Editor}/${response.data.postId}`);
+          })
+          .catch((err) => {
+            toast.error(err.message);
+          });
+      } else {
+        axiosInstance.post("/api/post", data, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        })
+          .then((response) => {
+            toast.success("The post was successfully created");
+            router.push(`${Routers.Editor}/${response.data.postId}`);
+          })
+          .catch((err) => {
+            toast.error(err.message);
+          });
+      }
     });
   }
 
