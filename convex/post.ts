@@ -90,3 +90,27 @@ export const getPostsByIdAndUserById = query({
     return post;
   },
 });
+
+export const getPosts = query({
+  args: {
+    numItems: v.optional(v.number()), // Number of posts to fetch
+    cursor: v.optional(v.string()), // Cursor for pagination
+  },
+  handler: async (ctx, args) => {
+    const { numItems = 10, cursor } = args;
+
+    // Convert undefined cursor to null
+    const paginationCursor = cursor ?? null;
+
+    // Fetch posts with pagination
+    const result = await ctx.db
+      .query("post")
+      .order("desc")
+      .paginate({ numItems, cursor: paginationCursor });
+
+    return {
+      posts: result.page, // The current page of posts
+      nextCursor: result.continueCursor, // Cursor for the next page
+    };
+  },
+});
