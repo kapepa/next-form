@@ -1,6 +1,21 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 
+export const updatePost = mutation({
+  args: {
+    _id: v.id("post"),
+    title: v.string(),
+    content: v.string(),
+    images: v.array(v.string()),
+    authorId: v.id("user"),
+  },
+  handler: async (ctx, args) => {
+    const { _id, ...other } = args;
+    await ctx.db.patch(_id, other);
+    return await ctx.db.get(_id);
+  }
+})
+
 export const createPost = mutation({
   args: {
     title: v.string(),

@@ -6,10 +6,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { rightOrder } from "@/lib/right-order";
-import { writeFiles } from "@/lib/files-worker";
+import { deleteFile, writeFiles } from "@/lib/files-worker";
 import { ICreatePostDto } from "../../../../../dto/create-post.dto";
 import { api } from "../../../../../convex/_generated/api";
 import { Id } from "../../../../../convex/_generated/dataModel";
+import { actualDifference } from "@/lib/difference-actual";
 
 // import { Id } from "../../../../convex/_generated/dataModel";
 
@@ -41,28 +42,34 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       );
     }
 
-    const existingPost = await fetchQuery(api.post.getPostById, { id: id as Id<"post"> })
-    const getDifference = existingPost?.images.filter((url) => !urls.includes(url))
+    const existingPost = await fetchQuery(api.post.getPostById, { id: id as Id<"post"> });
+    const { actual, difference } = actualDifference(existingPost!.images, urls);
+
+    if (!!difference?.length) {
+      await deleteFile(difference);
+    }
 
     // Handle image uploads
     let imageUrls: string[] = [];
     if (images.length) {
       imageUrls = await writeFiles({ files: images, folder: "posts" });
+      imageUrls.concat(actual)
     }
 
-    // // Prepare the post data for the mutation
-    // const postData = {
-    //   title: post.title,       // Required
-    //   content: post.content,   // Required
-    //   images: imageUrls,       // Required (array of strings)
-    //   authorId: user.id as Id<"user">, // Required
-    // };
+    // Prepare the post data for the mutation
+    const postData = {
+      title: post.title,       // Required
+      content: post.content,   // Required
+      images: imageUrls,       // Required (array of strings)
+      authorId: user.id as Id<"user">, // Required
+      _id: existingPost!._id,
+    };
 
-    // // Call the Convex mutation to create the post
-    // const createPost = await fetchMutation(api.post.createPost, postData);
+    // Call the Convex mutation to update the post
+    const createPost = await fetchMutation(api.post.updatePost, postData);
 
     return NextResponse.json(
-      { success: true },
+      { success: true, postId: createPost?._id },
       { status: 201 }
     );
   } catch (error) {
