@@ -55,7 +55,7 @@ const FormEditor: FC<FormEditorProps> = (props) => {
         })
           .then((response) => {
             toast.success("The post was successfully updated");
-            // router.push(`${Routers.Editor}/${response.data.postId}`);
+            router.push(`${Routers.Editor}/${response.data.postId}`);
           })
           .catch((err) => {
             toast.error(err.message);
