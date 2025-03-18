@@ -1,8 +1,4 @@
-"use server"
-
-import { fetchMutation, fetchQuery } from "convex/nextjs";
 import { NextRequest, NextResponse } from "next/server";
-// import { api } from "../../../../convex/_generated/api";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { rightOrder } from "@/lib/right-order";
@@ -10,17 +6,13 @@ import { deleteFile, writeFiles } from "@/lib/files-worker";
 import { ICreatePostDto } from "../../../../../dto/create-post.dto";
 import { api } from "../../../../../convex/_generated/api";
 import { Id } from "../../../../../convex/_generated/dataModel";
+
+import { fetchMutation, fetchQuery } from "convex/nextjs";
 import { actualDifference } from "@/lib/difference-actual";
 
-// import { Id } from "../../../../convex/_generated/dataModel";
-
-interface Params {
-  id: string;
-}
-
-export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const { id } = await params;
+    const { id } = params;
 
     const session = await getServerSession(authOptions);
     const user = session?.user;
@@ -42,42 +34,55 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       );
     }
 
+    // Fetch the existing post
     const existingPost = await fetchQuery(api.post.getPostById, { id: id as Id<"post"> });
-    const { actual, difference } = actualDifference(existingPost!.images, urls);
+    if (!existingPost) {
+      return NextResponse.json(
+        { success: false, message: "Post not found" },
+        { status: 404 }
+      );
+    }
 
-    if (!!difference?.length) {
+    // Calculate the difference between current and new URLs
+    const { actual, difference } = actualDifference(existingPost.images, urls);
+
+    // Delete files that are no longer needed
+    if (difference.length > 0) {
       await deleteFile(difference);
     }
 
     // Handle image uploads
     let imageUrls: string[] = [];
-    if (images.length) {
+    if (images.length > 0) {
       imageUrls = await writeFiles({ files: images, folder: "posts" });
-      imageUrls.concat(actual)
     }
+
+    // Combine new image URLs with existing ones
+    const updatedImageUrls = [...imageUrls, ...actual];
+
+    console.log(updatedImageUrls)
 
     // Prepare the post data for the mutation
     const postData = {
       title: post.title,       // Required
       content: post.content,   // Required
-      images: imageUrls,       // Required (array of strings)
+      images: updatedImageUrls, // Updated image URLs
       authorId: user.id as Id<"user">, // Required
-      _id: existingPost!._id,
+      _id: existingPost._id,
     };
 
     // Call the Convex mutation to update the post
-    const createPost = await fetchMutation(api.post.updatePost, postData);
+    const updatedPost = await fetchMutation(api.post.updatePost, postData);
 
     return NextResponse.json(
-      { success: true, postId: createPost?._id },
-      { status: 201 }
+      { success: true, postId: updatedPost!._id },
+      { status: 200 }
     );
   } catch (error) {
-    console.error("Error creating post:", error);
+    console.error("Error updating post:", error);
     return NextResponse.json(
       { success: false, message: error instanceof Error ? error.message : "An error occurred" },
       { status: 500 }
     );
   }
 }
-

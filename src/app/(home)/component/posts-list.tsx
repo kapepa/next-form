@@ -68,7 +68,13 @@ const PostsList: FC<PostsListProps> = ({ initialPosts, initialCursor }) => {
       <div ref={footerRef} className="w-full h-1"></div>
 
       {/* Loading spinner */}
-      {isLoading && <Spinner className="mt-4" />}
+      {isLoading && (
+        <div
+          className="flex justify-center items-center"
+        >
+          <Spinner className="mt-4" />
+        </div>
+      )}
 
       {/* No more posts message */}
       {!hasMore && (

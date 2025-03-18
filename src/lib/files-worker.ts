@@ -55,6 +55,7 @@ export async function deleteFile(urls: string[]) {
       try {
         await fs.access(filePath);
         await fs.unlink(filePath);
+        console.log(`Deleted file: ${filePath}`);
       } catch (error) {
         if (error instanceof Error && "code" in error) {
           if (error.code === "ENOENT") {
@@ -69,7 +70,6 @@ export async function deleteFile(urls: string[]) {
     });
 
     await Promise.all(deletePromises);
-
   } catch (error) {
     console.error("Error deleting files:", error);
     throw new Error("Failed to delete files");
