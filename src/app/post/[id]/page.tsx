@@ -1,21 +1,26 @@
-import { FC } from "react";
-import { Doc } from "../../../../convex/_generated/dataModel";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
+import { useGetPostServer } from "@/hooks/use-get-post-server";
+import { useProfileMyselfServer } from "@/hooks/use-profile-myself-server";
 import { Routers } from "@/types/routers";
+import { NextPage } from "next";
+import Link from "next/link";
 
-interface PostProps {
-  post: Doc<"post">
+interface PostPageProps {
+  params: {
+    id: string;
+  };
 }
 
-const Post: FC<PostProps> = (props) => {
-  const { post } = props;
-  const { _id, title, content, images } = post;
+const PostPageId: NextPage<PostPageProps> = async (props) => {
+  const { id } = props.params;
+  const post = await useGetPostServer(id);
+  const { profile } = await useProfileMyselfServer();
+  const { title, content, images } = post;
 
   return (
-    <Card className="w-full max-w-4xl mx-auto">
+    <Card className="w-full max-w-6xl mx-auto">
       <CardHeader>
         <CardTitle>{title}</CardTitle>
         <CardDescription>{content}</CardDescription>
@@ -29,7 +34,7 @@ const Post: FC<PostProps> = (props) => {
                   <img
                     src={url}
                     alt={`Image ${index + 1}`}
-                    className="w-full h-64 object-cover rounded-lg"
+                    className="w-full h-auto max-h-[680px] object-cover rounded-lg"
                   />
                 </div>
               </CarouselItem>
@@ -40,18 +45,23 @@ const Post: FC<PostProps> = (props) => {
         </Carousel>
       </CardContent>
       <CardFooter>
-        <Link
-          href={`${Routers.Post}/${_id}`}
-        >
-          <Button
-            variant="ghost"
-          >
-            Read more ...
-          </Button>
-        </Link>
+        {
+          post.authorId === profile._id
+          && (
+            <Link
+              href={`${Routers.Editor}/${id}`}
+            >
+              <Button
+                variant="ghost"
+              >
+                Edit post
+              </Button>
+            </Link>
+          )
+        }
       </CardFooter>
     </Card>
   )
 }
 
-export { Post }
+export default PostPageId;

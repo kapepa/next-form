@@ -1,8 +1,6 @@
 export function actualDifference(currentUrls: string[], newUrls: string[]): { actual: string[], difference: string[] } {
-  const difference: string[] = [];
-  const actual: string[] = [];
-
-  for (let url of currentUrls) newUrls.includes(url) ? actual.push(url) : difference.push(url);
+  const actual = newUrls.filter(url => currentUrls.includes(url));
+  const difference = currentUrls.filter(url => !newUrls.includes(url));
 
   return { actual, difference };
 }

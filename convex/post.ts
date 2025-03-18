@@ -114,3 +114,18 @@ export const getPosts = query({
     };
   },
 });
+
+export const getPost = query({
+  args: {
+    _id: v.id("post"),
+  },
+  handler: async (ctx, args) => {
+    const { _id } = args;
+
+    // Fetch the post by its ID
+    const post = await ctx.db.get(_id);
+    if (!post) throw new Error("Post not found"); // Handle the case where the post doesn't exist
+
+    return post;
+  },
+});
